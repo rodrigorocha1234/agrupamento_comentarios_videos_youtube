@@ -4,6 +4,8 @@ from src.contexto.contexto import Contexto
 from src.corrente.corrente import Corrente
 from src.corrente.obter_dia_anterior_corrente import ObterDiaAnteriorCorrente
 from src.corrente.obter_lista_id_canais_corrente import ObterListaIDCanaisCorrente
+from src.corrente.obter_lista_comentarios import ObterListaComentarios
+from src.operacao.ioperacao import IOperacao
 from src.servico.servico_api_youtube.iapi_youtube import IApiYoutube
 from src.utils.servico_log.log_protocol import LogProtocol
 
@@ -82,7 +84,7 @@ def test_obter_dia_anterior_corrente():
     e o salva no dicionário de contexto.
     """
     log_mock = MockLogger()
-    corrente = ObterDiaAnteriorCorrente(log_mock)
+    corrente = ObterDiaAnteriorCorrente(log_mock, 1)
 
     contexto = Contexto(data_hora_anterior=None, lista_id_canais=[])
     result = corrente.executar_processo(contexto)
@@ -165,3 +167,101 @@ def test_obter_lista_id_canais_corrente_exception_handling():
     assert result is False
     assert contexto["lista_id_canais"] == []
     log_mock.error.assert_called_with("Falha ao obter os canais")
+
+
+# 4. Testes para ObterListaComentarios (pecorrer_lista_videos)
+def test_obter_lista_comentarios_pecorrer_lista_videos_success():
+    """
+    Testa se o método pecorrer_lista_videos percorre corretamente os geradores de vídeos,
+    obtém os comentários de cada vídeo e os salva por meio do serviço de gravação de dados.
+    """
+    log_mock = MockLogger()
+    youtube_mock = MagicMock(spec=IApiYoutube)
+    gravacao_mock = MagicMock(spec=IOperacao)
+
+    # Configura os comentários retornados para o vídeo
+    mock_comentario = {"id": "c1", "text": "Comentário legal"}
+    youtube_mock.obter_comentarios_youtube.return_value = (c for c in [mock_comentario])
+
+    # Cria a corrente
+    corrente = ObterListaComentarios(
+        servico_log=log_mock,
+        servico_youtube=youtube_mock,
+        servico_gravacao_dados=gravacao_mock
+    )
+
+    # Cria o gerador de vídeos
+    def generator_videos():
+        yield {
+            "id": {"videoId": "vid_123"},
+            "snippet": {
+                "channelId": "chan_456",
+                "channelTitle": "Canal Legal",
+                "title": "Vídeo Legal"
+            }
+        }
+
+    lista_videos = [generator_videos()]
+
+    # Executa o método
+    corrente.pecorrer_lista_videos(lista_videos)
+
+    # Verifica se obter_comentarios_youtube foi chamado com o ID correto do vídeo
+    youtube_mock.obter_comentarios_youtube.assert_called_once_with(id_video="vid_123")
+
+    # Verifica se salvar_dados foi chamado com o comentário correto e caminho esperado
+    gravacao_mock.salvar_dados.assert_called_once()
+    call_args = gravacao_mock.salvar_dados.call_args[1]
+    
+    assert call_args["json_youtube"]["id"] == "c1"
+    assert "data_hora_insercao" in call_args["json_youtube"]
+    assert call_args["caminho"].startswith("bronze/comentarios/id_canal=chan_456/id_video=vid_123/")
+    assert call_args["caminho"].endswith(".json")
+
+
+def test_obter_lista_comentarios_pecorrer_lista_videos_invalid_type(capsys):
+    """
+    Testa se o método pecorrer_lista_videos não executa se o argumento
+    não for uma lista de geradores, exibindo uma mensagem correspondente.
+    """
+    log_mock = MockLogger()
+    youtube_mock = MagicMock(spec=IApiYoutube)
+    gravacao_mock = MagicMock(spec=IOperacao)
+
+    corrente = ObterListaComentarios(
+        servico_log=log_mock,
+        servico_youtube=youtube_mock,
+        servico_gravacao_dados=gravacao_mock
+    )
+
+    # Passa uma lista contendo strings ao invés de generators
+    corrente.pecorrer_lista_videos(["não_sou_um_gerador"])
+
+    # Garante que os mocks de youtube e gravação não foram acionados
+    youtube_mock.obter_comentarios_youtube.assert_not_called()
+    gravacao_mock.salvar_dados.assert_not_called()
+
+    # Verifica se a mensagem de "Outro tipo" foi exibida no stdout
+    captured = capsys.readouterr()
+    assert "Outro tipo" in captured.out
+
+
+def test_obter_lista_comentarios_executar_processo_success():
+    """
+    Testa a execução do processo da corrente ObterListaComentarios.
+    """
+    log_mock = MockLogger()
+    youtube_mock = MagicMock(spec=IApiYoutube)
+    gravacao_mock = MagicMock(spec=IOperacao)
+
+    corrente = ObterListaComentarios(
+        servico_log=log_mock,
+        servico_youtube=youtube_mock,
+        servico_gravacao_dados=gravacao_mock
+    )
+
+    contexto = Contexto(data_hora_anterior=None, lista_id_canais=[])
+    contexto["lista_videos"] = []
+    
+    result = corrente.executar_processo(contexto)
+    assert result is True

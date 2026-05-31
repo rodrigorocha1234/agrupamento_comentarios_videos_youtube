@@ -1,4 +1,4 @@
-from typing import Protocol, Any, List
+from typing import Protocol, Any, Generator
 
 
 class IOperacao(Protocol):
@@ -9,5 +9,5 @@ class IOperacao(Protocol):
     def salvar_dados(self, **kwargs: Any) -> None:
         ...
 
-    def consultar_dados(self) -> List[str]:
+    def consultar_dados(self) -> Generator[Any, None, None]:
         ...

@@ -14,8 +14,8 @@ SET s3_url_style='path';
 """)
 
 df = con.execute("""
-SELECT DISTINCT  snippet.videoId  AS id_video
-FROM read_json('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/comentario*.json')
+SELECT DISTINCT snippet.channelId as id_canal,  snippet.videoId as id_video
+FROM read_json_auto('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/comentario*.json');
 """).fetchdf()
 
 print(df.head()['id_video'].to_list())

@@ -16,7 +16,7 @@ logger = LogFactory.create(logger_type="python", nome_arquivo="etl")
 contexto = Contexto(data_hora_anterior=None, lista_id_canais=[], lista_videos=[])
 servico_youtube = YoutubeAPI(servico_log=logger)
 lista_id_canais = ['@jogatinaepica']
-dias_anterior = 4
+dias_anterior = 2
 
 conexao_s3 = ConfigS3Minio()
 
@@ -31,3 +31,4 @@ p1.set_proxima_corrente(p2) \
     .set_proxima_corrente(p3) \
     .set_proxima_corrente(p4)
 p1.corrente(contexto=contexto)
+
