@@ -1,4 +1,4 @@
-from typing import Protocol, Any, Generator
+from typing import Protocol, Any
 
 import pandas as pd
 
@@ -11,5 +11,5 @@ class IOperacao(Protocol):
     def salvar_dados(self, **kwargs: Any) -> None:
         ...
 
-    def consultar_dados(self) ->  pd.DataFrame:
+    def consultar_dados(self) -> pd.DataFrame:
         ...
