@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, List, Generator
 
 import duckdb
+import pandas as pd
 from minio import Minio
 
 from src.config.config import Config
@@ -35,7 +36,7 @@ class OperacaoMInioS3:
         driver.put_object(bucket_name=self.__BUCKET, object_name=caminho, data=io.BytesIO(json_bytes),
                           length=len(json_bytes), content_type='application/json', )
 
-    def consultar_dados(self) -> Generator[Any, None, None]:
+    def consultar_dados(self) -> pd.DataFrame:
         with  duckdb.connect() as con:
             con.execute(f"""
             INSTALL httpfs;
@@ -48,10 +49,10 @@ class OperacaoMInioS3:
             SET s3_url_style='path';
             """)
 
-            df = con.execute("""
+            datasframe = con.execute("""
             SELECT DISTINCT  snippet.videoId  AS id_video
             FROM read_json('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/comentario*.json')
             """).fetchdf()
-        yield from df.head()['id_video'].to_list()
+        return df
 
 

@@ -1,7 +1,7 @@
 import os.path
 from datetime import datetime, timezone
 from itertools import chain
-from typing import Generator, Final, Dict, List
+from typing import Generator, Final, Dict, List, Tuple
 
 from src.contexto.contexto import Contexto
 from src.corrente.corrente import Corrente
@@ -30,17 +30,31 @@ class ObterListaComentarios(Corrente):
         comentario['data_hora_insercao'] = self.__DATA_ATUAL.strftime("%d/%m/%Y %H:%M:%S")
         self.__servico_gravacao_dados.salvar_dados(json_youtube=comentario, caminho=caminho_bucket)
 
+    def varrer_comentarios_nao_gravados(self, contexto: Contexto) -> List[Tuple[str, str, str]]:
+        lista_id_comentarios = []
+        lista_videos = contexto['lista_videos']
+        for video in chain.from_iterable(lista_videos):
+            comentarios = self.__obter_comentarios(video['id']['videoId'])
+            for comentario in comentarios:
+                id_comentario = comentario["snippet"]["topLevelComment"]["id"]
+                self.__gravar_comentarios(comentario=comentario, video=video, id_comentario=id_comentario)
+                lista_id_comentarios.append((video["snippet"]["channelId"], video['id']['videoId'], id_comentario))
+        return lista_id_comentarios
+
+    def varrer_comentarios_gravados(self):
+        pass
+
 
     def executar_processo(self, contexto: Contexto) -> bool:
         try:
-            lista_id_comentarios = []
-            lista_videos = contexto['lista_videos']
-            for video in chain.from_iterable(lista_videos):
-                comentarios = self.__obter_comentarios(video['id']['videoId'])
-                for comentario in comentarios:
-                    id_comentario = comentario["snippet"]["topLevelComment"]["id"]
-                    self.__gravar_comentarios(comentario=comentario, video=video, id_comentario=id_comentario)
-                    lista_id_comentarios.append((video["snippet"]["channelId"], video['id']['videoId'], id_comentario))
+
+            lista_id_comentarios = self.varrer_comentarios_nao_gravados(contexto)
+            consulta = """
+            SELECT DISTINCT   snippet.channelId as id_canal,  snippet.videoId as id_video
+            FROM read_json_auto('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/id_comentario=*/comentario*.json');
+            """
+
+
             contexto['lista_id_comentarios'] = lista_id_comentarios
             return True
         except Exception as e:
