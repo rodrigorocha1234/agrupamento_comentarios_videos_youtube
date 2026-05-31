@@ -1,4 +1,4 @@
-from typing import Protocol, Any
+from typing import Protocol, Any, List
 
 
 class IOperacao(Protocol):
@@ -7,4 +7,7 @@ class IOperacao(Protocol):
         ...
 
     def salvar_dados(self, **kwargs: Any) -> None:
+        ...
+
+    def consultar_dados(self) -> List[str]:
         ...

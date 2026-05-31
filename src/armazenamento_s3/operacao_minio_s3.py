@@ -14,7 +14,7 @@ class OperacaoMInioS3:
     def __init__(self, conexao_s3: IDbConfig[Minio]):
         self.__conexao_s3 = conexao_s3
         self.__host = Config.HOST_S3
-        self.__port = int(Config.PORT_S3)
+        self.__port = Config.PORT_S3
         self.__BUCKET = 'youtube'
         self.__DATA_ATUAL = datetime.now()
 
@@ -25,17 +25,15 @@ class OperacaoMInioS3:
         except OSError:
             return False
 
+
+
     def salvar_dados(self, **kwargs: Any) -> None:
         json_youtube = kwargs['json_youtube']
-        json_youtube['data_hora_insercao'] = self.__DATA_ATUAL.strftime("%d/%m/%Y %H:%M:%S")
+        caminho = kwargs['caminho']
+
         driver = self.__conexao_s3.obter_driver()
         json_data = json.dumps(json_youtube, ensure_ascii=False)
         json_bytes = json_data.encode('utf-8')
         data_stream = io.BytesIO(json_bytes)
-        nome_objeto = (f'youtube/ano={self.__DATA_ATUAL.strftime("%Y")}/'
-                       f'mes={self.__DATA_ATUAL.strftime("%m")}/'
-                       f'dia={self.__DATA_ATUAL.strftime("%d")}/'
-                       f'dados_{int(datetime.now(timezone.utc).timestamp())}.json')
-
-        driver.put_object(bucket_name=self.__BUCKET, object_name=nome_objeto, data=io.BytesIO(json_bytes),
+        driver.put_object(bucket_name=self.__BUCKET, object_name=caminho, data=io.BytesIO(json_bytes),
             length=len(json_bytes), content_type='application/json', )

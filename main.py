@@ -1,3 +1,5 @@
+from src.armazenamento_s3.db_config_minio import ConfigS3Minio
+from src.armazenamento_s3.operacao_minio_s3 import OperacaoMInioS3
 from src.contexto.contexto import Contexto
 from src.corrente.obter_dia_anterior_corrente import ObterDiaAnteriorCorrente
 from src.corrente.obter_lista_comentarios import ObterListaComentarios
@@ -16,11 +18,16 @@ servico_youtube = YoutubeAPI(servico_log=logger)
 lista_id_canais = ['@jogatinaepica']
 dias_anterior = 4
 
+conexao_s3 = ConfigS3Minio()
+
+operacao_s3 = OperacaoMInioS3(conexao_s3=conexao_s3)
+
+
 p1 = ObterDiaAnteriorCorrente(servico_log=logger, dias_anterior=dias_anterior)
 p2 = ObterListaIDCanaisCorrente(servico_log=logger, lista_canais=lista_id_canais, servico_youtube=servico_youtube)
 p3 = ObterListaVideosCorrente(servico_log=logger, servico_youtube=servico_youtube)
-p4 = ObterListaComentarios(servico_log=logger, servico_youtube=servico_youtube)
+p4 = ObterListaComentarios(servico_log=logger, servico_youtube=servico_youtube, servico_gravacao_dados=operacao_s3)
 p1.set_proxima_corrente(p2) \
     .set_proxima_corrente(p3) \
-    # .set_proxima_corrente(p4)
+    .set_proxima_corrente(p4)
 p1.corrente(contexto=contexto)
