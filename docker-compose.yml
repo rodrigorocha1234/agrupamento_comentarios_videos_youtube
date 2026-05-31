@@ -15,6 +15,7 @@ services:
 
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
 
     ports:
       - "5432:5432"
@@ -100,7 +101,7 @@ services:
   mlflow:
     build:
       context: .
-      dockerfile: scripts_dockerfile/mlflow.Dockerfile
+      dockerfile: scripts/mlflow.Dockerfile
 
     container_name: mlflow-server
 
@@ -145,6 +146,74 @@ services:
     networks:
       mlflow-network:
         ipv4_address: 172.25.0.5
+
+
+  redis:
+    image: redis:7
+    container_name: superset_redis
+    restart: always
+    environment:
+      <<: *common-env
+    expose:
+      - "6379"
+    networks:
+      mlflow-network:
+        ipv4_address: 172.25.0.6
+
+  superset:
+    build:
+      context: scripts
+      dockerfile: superset.Dockerfile
+
+    container_name: superset
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./scripts/superset_config.py:/app/superset_config.py
+    environment:
+     <<: *common-env
+    networks:
+      mlflow-network:
+        ipv4_address: 172.25.0.7
+
+
+  superset-worker:
+    build:
+      context: scripts
+      dockerfile: superset.Dockerfile
+    container_name: superset_worker
+    restart: always
+    depends_on:
+      - redis
+      - postgres
+    command: celery --app=superset.tasks.celery_app:app worker --loglevel=INFO
+    environment:
+      <<: *common-env
+    networks:
+      mlflow-network:
+        ipv4_address: 172.25.0.8
+
+  superset-beat:
+    build:
+      context: scripts
+      dockerfile: superset.Dockerfile
+    container_name: superset_beat
+    restart: always
+    environment:
+      <<: *common-env
+    depends_on:
+      - redis
+      - postgres
+    command: celery --app=superset.tasks.celery_app:app beat --loglevel=INFO
+    networks:
+      mlflow-network:
+        ipv4_address: 172.25.0.9
+
+
 
 networks:
   mlflow-network:
