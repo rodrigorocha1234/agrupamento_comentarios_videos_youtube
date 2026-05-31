@@ -4,12 +4,13 @@ from typing import Generator, Dict
 from googleapiclient.discovery import build  # type: ignore
 
 from src.config.config import Config
-
+from src.utils.servico_log.log_protocol import LogProtocol
 
 
 class YoutubeAPI:
 
-    def __init__(self):
+    def __init__(self, servico_log: LogProtocol):
+        self.__servico_log = servico_log
         self.__youtube = build('youtube', 'v3', developerKey=Config.CHAVE_API_YOUTUBE)
 
     def obter_id_canal(self, id_canal: str):
@@ -24,7 +25,7 @@ class YoutubeAPI:
             response = request.execute()
             url_canal = f"https://www.youtube.com/channel/{id_canal}"
 
-            logger.info(f'Sucesso ao recuperar lista de videos do canal {id_canal}', extra={
+            self.__servico_log.info(f'Sucesso ao recuperar lista de videos do canal {id_canal}', extra={
                 "descricao": "Consulta canal YouTube",
                 "url": url_canal,
                 "codigo": 200,
@@ -34,7 +35,7 @@ class YoutubeAPI:
                 return response['items'][0]['id']['channelId'], response['items'][0]['snippet']['title']
             return None
         except Exception as e:
-            logger.error(f'Erro ao consultar id do canal {id_canal}', extra={
+            self.__servico_log.error(f'Erro ao consultar id do canal {id_canal}', extra={
                 'exception': e
             })
             return None
@@ -56,7 +57,7 @@ class YoutubeAPI:
 
             response = request.execute()
 
-            logger.info(f'Sucesso ao recuperar o vídeo do canal {id_canal}', extra={
+            self.__servico_log.info(f'Sucesso ao recuperar o vídeo do canal {id_canal}', extra={
                 "descricao": "Consulta vídeo YouTube",
                 "url": 'url Vídeo',
                 "codigo": 200,
@@ -89,7 +90,7 @@ class YoutubeAPI:
                     textFormat="plainText"
                 )
                 response = request.execute()
-                logger.info(f'Sucesso ao comentarios o vídeo  {id_video}', extra={
+                self.__servico_log.info(f'Sucesso ao comentarios o vídeo  {id_video}', extra={
                     "descricao": "Consulta comentários YouTube",
                     "url": 'url_canal',
                     "codigo": 200,
@@ -105,7 +106,7 @@ class YoutubeAPI:
                 if not next_page_token:
                     break
             except Exception as e:
-                logger.error(f'erro ao recuperar_comentarios {e}', extra={
+                self.__servico_log.error(f'erro ao recuperar_comentarios {e}', extra={
                     'exception': str(e)
                 })
                 break
@@ -138,7 +139,7 @@ class YoutubeAPI:
                     break
 
                 yield from response.get("items", [])
-                logger.info(f'Sucesso ao pegar a resposta do comentário   {id_comentario}', extra={
+                self.__servico_log.info(f'Sucesso ao pegar a resposta do comentário   {id_comentario}', extra={
                     "descricao": "Consulta comentários YouTube",
                     "url": 'url_canal',
                     "codigo": 200,
@@ -150,7 +151,7 @@ class YoutubeAPI:
                     break
 
             except Exception as e:
-                logger.error('erro ao recuperar_comentarios', extra={
+                self.__servico_log.error('erro ao recuperar_comentarios', extra={
                     'exception': str(e)
                 })
                 break

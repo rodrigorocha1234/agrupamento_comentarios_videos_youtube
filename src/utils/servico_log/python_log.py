@@ -1,18 +1,14 @@
 import logging
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
+from src.utils.servico_log.conexto_log_params import ContextoLogFilter
 from src.utils.servico_log.log_protocol import LogProtocol
 
 
 class PythonLog(LogProtocol):
 
-    def __init__(
-        self,
-        nome_arquivo: str = "extracao",
-        level_mensagem: int = logging.INFO,
-    ):
-
+    def __init__(self, nome_arquivo: str = "extracao", level_mensagem: int = logging.INFO, ):
         root_dir = Path(__file__).resolve().parent.parent.parent.parent
         log_dir = root_dir / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -21,32 +17,30 @@ class PythonLog(LogProtocol):
         logger.setLevel(level_mensagem)
 
         if not logger.handlers:
-            formatter = logging.Formatter(
-                fmt=(
-                    "%(asctime)s | "
-                    "%(levelname)-8s | "
-                    "module=%(module)s | "
-                    "logger=%(name)s | "
-                    "method=%(funcName)s | "
-                    "line=%(lineno)d | "
-                    "%(message)s"
-                ),
-                datefmt="%Y-%m-%d %H:%M:%S"
-            )
+            formatter = logging.Formatter(fmt=("%(asctime)s | "
+                                               "%(levelname)-8s | "
+                                               "module=%(module)s | "
+                                               "logger=%(name)s | "
+                                               "method=%(funcName)s | "
+                                               "line=%(lineno)d | "
+                                               "%(message)s | "
+                                               "%(descricao)s | "
+                                               "%(url)s | "
+                                               "%(codigo)s | "
+                                               "%(requisicao)s"
+
+            ), datefmt="%Y-%m-%d %H:%M:%S")
 
             console = logging.StreamHandler()
             console.setFormatter(formatter)
 
-            file = RotatingFileHandler(
-                log_dir / f"{nome_arquivo}.log",
-                maxBytes=10 * 1024 * 1024,
-                backupCount=5,
-                encoding="utf-8"
-            )
+            file = RotatingFileHandler(log_dir / f"{nome_arquivo}.log", maxBytes=10 * 1024 * 1024, backupCount=5,
+                encoding="utf-8")
             file.setFormatter(formatter)
 
             logger.addHandler(console)
             logger.addHandler(file)
+            logger.addFilter(ContextoLogFilter())
 
         self._logger = logger
 

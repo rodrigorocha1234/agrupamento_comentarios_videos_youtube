@@ -9,6 +9,7 @@ logger = LogFactory.create(logger_type="python", nome_arquivo="etl")
 
 contexto = Contexto(data_hora_anterior="")
 
+id_canal = ""
 
 p1 = ObterDiaAnteriorCorrente(servico_log=logger)
 p1.corrente(contexto=contexto)
