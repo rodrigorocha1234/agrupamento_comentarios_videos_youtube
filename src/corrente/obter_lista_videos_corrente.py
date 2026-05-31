@@ -29,7 +29,11 @@ class ObterListaVideosCorrente(Corrente):
 
     def executar_processo(self, contexto: Contexto) -> bool:
         gerador_videos = self.__buscar_dados_videos_corrente(contexto)
-        if gerador_videos:
-            contexto['lista_videos'] = gerador_videos
-            return True
-        return False
+
+        if gerador_videos is None:
+            return False
+
+        for video in chain.from_iterable(gerador_videos):
+            print(video['snippet']['channelId'],video['snippet']['channelTitle'], video['id']['videoId'], video['snippet']['title'] )
+
+        return True
