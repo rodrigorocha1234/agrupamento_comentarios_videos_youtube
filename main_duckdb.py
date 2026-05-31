@@ -1,5 +1,7 @@
 import duckdb
 
+from src.contexto.video_youtube import VideoYoutube
+
 con = duckdb.connect()
 
 con.execute("""
@@ -17,5 +19,8 @@ df = con.execute("""
 SELECT DISTINCT snippet.channelId as id_canal,  snippet.videoId as id_video
 FROM read_json_auto('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/id_comentario=*/comentario*.json');
 """).fetchdf()
+for linha in df.itertuples(index=False, name=None):
+    video = VideoYoutube(*linha)
 
-print(df.head())
+    print(video.id_video)
+    print(video.id_canal)

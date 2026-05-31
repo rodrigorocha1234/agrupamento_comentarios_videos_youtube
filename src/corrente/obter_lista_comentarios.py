@@ -3,7 +3,10 @@ from datetime import datetime, timezone
 from itertools import chain
 from typing import Generator, Final, Dict, List, Tuple
 
+import pandas as pd
+
 from src.contexto.contexto import Contexto
+from src.contexto.video_youtube import VideoYoutube
 from src.corrente.corrente import Corrente
 from src.operacao.ioperacao import IOperacao
 from src.servico.servico_api_youtube.iapi_youtube import IApiYoutube
@@ -17,16 +20,15 @@ class ObterListaComentarios(Corrente):
         self.__servico_gravacao_dados = servico_gravacao_dados
         self.__DATA_ATUAL: Final[datetime] = datetime.now()
 
-    def __obter_comentarios(self, id_video: str):
+    def __obter_comentarios(self, id_video: str) -> Generator[dict, None, None]:
         comentarios = self.__servico_youtube.obter_comentarios_youtube(id_video=id_video)
         yield from comentarios
 
-    def __gravar_comentarios(self, video: Dict, comentario: Dict, id_comentario: str) :
+    def __gravar_comentarios(self, id_canal: str, id_video: str, comentario: Dict, id_comentario: str):
 
-        caminho_bucket = os.path.join('bronze', 'comentarios', f'id_canal={video["snippet"]["channelId"]}',
-                                          f'id_video={video["id"]["videoId"]}',
-                                          f'id_comentario={id_comentario}',
-                                          f'comentario_{int(datetime.now(timezone.utc).timestamp())}.json')
+        caminho_bucket = os.path.join('bronze', 'comentarios', f'id_canal={id_canal}', f'id_video={id_video}',
+                                      f'id_comentario={id_comentario}',
+                                      f'comentario_{int(datetime.now(timezone.utc).timestamp())}.json')
         comentario['data_hora_insercao'] = self.__DATA_ATUAL.strftime("%d/%m/%Y %H:%M:%S")
         self.__servico_gravacao_dados.salvar_dados(json_youtube=comentario, caminho=caminho_bucket)
 
@@ -34,16 +36,28 @@ class ObterListaComentarios(Corrente):
         lista_id_comentarios = []
         lista_videos = contexto['lista_videos']
         for video in chain.from_iterable(lista_videos):
-            comentarios = self.__obter_comentarios(video['id']['videoId'])
+            id_video = video["id"]["videoId"]
+            id_canal = video["snippet"]["channelId"]
+            comentarios = self.__obter_comentarios(id_video)
             for comentario in comentarios:
                 id_comentario = comentario["snippet"]["topLevelComment"]["id"]
-                self.__gravar_comentarios(comentario=comentario, video=video, id_comentario=id_comentario)
-                lista_id_comentarios.append((video["snippet"]["channelId"], video['id']['videoId'], id_comentario))
+                self.__gravar_comentarios(id_canal=id_canal, comentario=comentario, id_video=id_video,
+                                          id_comentario=id_comentario)
+                lista_id_comentarios.append((id_canal, id_video, id_comentario))
         return lista_id_comentarios
 
-    def varrer_comentarios_gravados(self):
-        pass
-
+    def varrer_comentarios_gravados(self, dataframe: pd.DataFrame):
+        lista_id_comentarios = []
+        for linha in dataframe.itertuples(index=False, name=None):
+            video = VideoYoutube(*linha)
+            id_canal = video.id_canal
+            id_video = video.id_video
+            comentarios = self.__obter_comentarios(id_video)
+            for comentario in comentarios:
+                id_comentario = comentario["snippet"]["topLevelComment"]["id"]
+                self.__gravar_comentarios(id_canal=id_canal, id_video=id_video, id_comentario=id_comentario, comentario=comentario)
+                lista_id_comentarios.append((id_canal, id_video, comentario))
+        return lista_id_comentarios
 
     def executar_processo(self, contexto: Contexto) -> bool:
         try:
@@ -53,9 +67,19 @@ class ObterListaComentarios(Corrente):
             SELECT DISTINCT   snippet.channelId as id_canal,  snippet.videoId as id_video
             FROM read_json_auto('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/id_comentario=*/comentario*.json');
             """
+            try:
+                dataframe = self.__servico_gravacao_dados.consultar_dados(consulta)
+            except Exception as e:
+                print(e)
 
-
-            contexto['lista_id_comentarios'] = lista_id_comentarios
+                dataframe = pd.DataFrame()
+            if not dataframe.empty:
+                lista_id_comentarios_gravados = self.varrer_comentarios_gravados(dataframe)
+                lista_id_comentarios_completa = lista_id_comentarios_gravados + lista_id_comentarios
+                lista_id_comentarios_completa = list(set(lista_id_comentarios_completa))
+            else:
+                lista_id_comentarios_completa = lista_id_comentarios
+            contexto['lista_id_comentarios'] = lista_id_comentarios_completa
             return True
         except Exception as e:
             print(e)

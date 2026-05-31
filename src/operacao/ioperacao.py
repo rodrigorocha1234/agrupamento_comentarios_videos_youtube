@@ -11,5 +11,5 @@ class IOperacao(Protocol):
     def salvar_dados(self, **kwargs: Any) -> None:
         ...
 
-    def consultar_dados(self) -> pd.DataFrame:
+    def consultar_dados(self, consulta: str) -> pd.DataFrame:
         ...

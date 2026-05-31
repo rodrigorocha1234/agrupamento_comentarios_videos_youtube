@@ -36,23 +36,20 @@ class OperacaoMInioS3:
         driver.put_object(bucket_name=self.__BUCKET, object_name=caminho, data=io.BytesIO(json_bytes),
                           length=len(json_bytes), content_type='application/json', )
 
-    def consultar_dados(self) -> pd.DataFrame:
+    def consultar_dados(self, consulta: str) -> pd.DataFrame:
         with  duckdb.connect() as con:
             con.execute(f"""
             INSTALL httpfs;
             LOAD httpfs;
     
-            SET s3_endpoint='{Config.HOST_S3}';
+            SET s3_endpoint='{Config.HOST_S3}:9000';
             SET s3_access_key_id='{Config.USER_S3}';
             SET s3_secret_access_key='{Config.PASSWORD_S3}';
             SET s3_use_ssl=false;
             SET s3_url_style='path';
             """)
 
-            datasframe = con.execute("""
-            SELECT DISTINCT  snippet.videoId  AS id_video
-            FROM read_json('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/comentario*.json')
-            """).fetchdf()
-        return df
+            datasframe = con.execute(consulta).fetchdf()
+        return datasframe
 
 
