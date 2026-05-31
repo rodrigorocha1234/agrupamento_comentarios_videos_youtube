@@ -1,6 +1,5 @@
 from datetime import datetime
-from itertools import chain
-from typing import List, Generator, Dict
+from typing import List, Generator
 
 from src.contexto.contexto import Contexto
 from src.corrente.corrente import Corrente
@@ -9,21 +8,16 @@ from src.utils.servico_log.log_protocol import LogProtocol
 
 
 class ObterListaVideosCorrente(Corrente):
-    def __init__(self,  servico_log: LogProtocol,servico_youtube: IApiYoutube):
+    def __init__(self, servico_log: LogProtocol, servico_youtube: IApiYoutube):
         super().__init__(servico_log=servico_log)
         self.__servico_youtube = servico_youtube
-
-
 
     def __buscar_dados_videos_corrente(self, contexto: Contexto) -> List[Generator[dict, None, None]] | None:
         lista_id_canais = contexto['lista_id_canais']
         data_hora_busca = contexto['data_hora_anterior']
         if isinstance(data_hora_busca, datetime):
-            lista_videos = [
-                self.__servico_youtube.obter_video_por_data(id_canal=id_canal, data_inicio=data_hora_busca) for
-                id_canal in
-                lista_id_canais
-            ]
+            lista_videos = [self.__servico_youtube.obter_video_por_data(id_canal=id_canal, data_inicio=data_hora_busca)
+                for id_canal in lista_id_canais]
             return lista_videos
         return None
 
