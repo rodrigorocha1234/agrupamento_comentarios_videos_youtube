@@ -19,7 +19,7 @@ dias_anterior = 4
 p1 = ObterDiaAnteriorCorrente(servico_log=logger, dias_anterior=dias_anterior)
 p2 = ObterListaIDCanaisCorrente(servico_log=logger, lista_canais=lista_id_canais, servico_youtube=servico_youtube)
 p3 = ObterListaVideosCorrente(servico_log=logger, servico_youtube=servico_youtube)
-# p4 = ObterListaComentarios(servico_log=logger, servico_youtube=servico_youtube)
+p4 = ObterListaComentarios(servico_log=logger, servico_youtube=servico_youtube)
 p1.set_proxima_corrente(p2) \
     .set_proxima_corrente(p3) \
     # .set_proxima_corrente(p4)
