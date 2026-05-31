@@ -8,4 +8,4 @@ load_dotenv()
 
 class Config:
     CHAVE_API_YOUTUBE: Final[str] = os.environ.get('CHAVE_API_YOUTUBE', "")
-    print(CHAVE_API_YOUTUBE)
+

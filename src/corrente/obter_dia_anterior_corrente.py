@@ -6,12 +6,13 @@ from src.utils.servico_log.log_protocol import LogProtocol
 
 
 class ObterDiaAnteriorCorrente(Corrente):
-    def __init__(self, servico_log: LogProtocol):
+    def __init__(self, servico_log: LogProtocol, dias_anterior: int):
         super().__init__(servico_log=servico_log)
+        self.__dias_anterior = dias_anterior
 
-    @staticmethod
-    def __obter_dia_anterior() -> datetime:
-        data_hora_anterior = datetime.now() - timedelta(days=1)
+
+    def __obter_dia_anterior(self) -> datetime:
+        data_hora_anterior = datetime.now() - timedelta(days=self.__dias_anterior)
 
         return data_hora_anterior
 
