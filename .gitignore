@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .idea
 minio-data
+*.odt
 
 # C extensions
 *.so
