@@ -8,5 +8,5 @@ SET s3_use_ssl=false;
 SET s3_url_style='path';
 
 
-SELECT DISTINCT STINCT snippet.videoId
-FROM read_json_auto('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/comentario*.json');
+SELECT DISTINCT snippet.channelId
+FROM read_json_auto('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/id_comentario=*/comentario*.json');
