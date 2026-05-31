@@ -9,7 +9,7 @@ LogFactory.register("python", lambda **kwargs: PythonLog(**kwargs))
 
 logger = LogFactory.create(logger_type="python", nome_arquivo="etl")
 
-contexto = Contexto(data_hora_anterior="", lista_id_canais=[])
+contexto = Contexto(data_hora_anterior=None, lista_id_canais=[])
 servico_youtube = YoutubeAPI(servico_log=logger)
 lista_id_canais = ['@jogatinaepica']
 

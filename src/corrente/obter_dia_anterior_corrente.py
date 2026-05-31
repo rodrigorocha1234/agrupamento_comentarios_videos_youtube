@@ -10,10 +10,10 @@ class ObterDiaAnteriorCorrente(Corrente):
         super().__init__(servico_log=servico_log)
 
     @staticmethod
-    def __obter_dia_anterior() -> str:
+    def __obter_dia_anterior() -> datetime:
         data_hora_anterior = datetime.now() - timedelta(days=1)
-        data_hora_formatada = data_hora_anterior.strftime("%Y-%m-%dT%H:%M:%SZ")
-        return data_hora_formatada
+
+        return data_hora_anterior
 
     def executar_processo(self, contexto: Contexto) -> bool:
         data_hora_anterior = self.__obter_dia_anterior()
