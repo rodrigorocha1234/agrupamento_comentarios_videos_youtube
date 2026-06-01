@@ -23,6 +23,7 @@ class ObterListaVideosCorrente(Corrente):
 
     def executar_processo(self, contexto: Contexto) -> bool:
         gerador_videos = self.__buscar_dados_videos_corrente(contexto)
+
         if gerador_videos:
             contexto['lista_videos'] = gerador_videos
             return True

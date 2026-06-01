@@ -16,8 +16,16 @@ logger = LogFactory.create(logger_type="python", nome_arquivo="etl")
 
 contexto = Contexto(data_hora_anterior=None, lista_id_canais=[], lista_videos=[], lista_id_comentarios=[])
 servico_youtube = YoutubeAPI(servico_log=logger)
-lista_id_canais = ['@jogatinaepica']
-dias_anterior = 2
+lista_id_canais = [
+    '@jogatinaepica', # x
+    # '@CKXgameplay',
+    # '@PalaDinXPG',
+    # '@CanaldoVoid',
+    # '@ChratosGameplay',
+    # '@cmdrleonerd',
+    # '@100choro-Belém-Brasil'
+]
+dias_anterior = 4
 
 conexao_s3 = ConfigS3Minio()
 

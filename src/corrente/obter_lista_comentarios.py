@@ -37,13 +37,18 @@ class ObterListaComentarios(Corrente):
         lista_videos = contexto['lista_videos']
         for video in chain.from_iterable(lista_videos):
             id_video = video["id"]["videoId"]
+            titulo_video = video["snippet"]["title"]
             id_canal = video["snippet"]["channelId"]
+            nome_canal = video["snippet"]["channelTitle"]
+
             comentarios = self.__obter_comentarios(id_video)
             for comentario in comentarios:
                 id_comentario = comentario["snippet"]["topLevelComment"]["id"]
+                comentario['nome_canal'] = nome_canal
+                comentario['titulo_video'] = titulo_video
                 self.__gravar_comentarios(id_canal=id_canal, comentario=comentario, id_video=id_video,
                                           id_comentario=id_comentario)
-                lista_id_comentarios.append((id_canal, id_video, id_comentario))
+                lista_id_comentarios.append((id_canal, nome_canal, id_video, titulo_video ,  id_comentario))
         return lista_id_comentarios
 
     def varrer_comentarios_gravados(self, dataframe: pd.DataFrame):

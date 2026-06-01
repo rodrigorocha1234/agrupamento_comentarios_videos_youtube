@@ -21,9 +21,11 @@ class ObterListaRespostaComentariosCorrente(Corrente):
     def executar_processo(self, contexto: Contexto) -> bool:
         try:
             lista_id_comentarios = contexto["lista_id_comentarios"]
-            for id_canal, id_video, id_comentario in lista_id_comentarios:
+            for id_canal, nome_canal, id_video, titulo_video ,  id_comentario in lista_id_comentarios:
                 req_reposta_comentarios = self.__servico_youtube.obter_resposta_comentarios(id_comentario)
                 for resposta_comentario in req_reposta_comentarios:
+                    resposta_comentario["nome_canal"] = nome_canal
+                    resposta_comentario["titulo_video"] = titulo_video
                     caminho_bucket = os.path.join('bronze', 'resposta_comentarios', f'id_canal={id_canal}',
                                                  f'id_video={id_video}',
                                                  f'id_comentario={id_comentario}',
