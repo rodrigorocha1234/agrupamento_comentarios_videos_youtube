@@ -7,8 +7,8 @@ SET s3_secret_access_key='minio123';
 SET s3_use_ssl=false;
 SET s3_url_style='path';
 
-SELECT DISTINCT   snippet.channelId as id_canal,  snippet.videoId as id_video , nome_canal, titulo_video
-            FROM read_json_auto('s3://youtube/bronze/comentarios/id_canal=*/id_video=*/id_comentario=*/comentario*.json');
+SELECT DISTINCT   nome_canal
+            FROM read_json_auto('s3://youtube/bronze/comentarios/ano=*/mes=*/dia=*/id_canal=*/id_video=*/id_comentario=*/comentario*.json');
 
 
 SELECT *

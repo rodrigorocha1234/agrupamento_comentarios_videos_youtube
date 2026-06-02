@@ -18,14 +18,17 @@ contexto = Contexto(data_hora_anterior=None, lista_id_canais=[], lista_videos=[]
 servico_youtube = YoutubeAPI(servico_log=logger)
 lista_id_canais = [
     '@jogatinaepica', # x
-    # '@CKXgameplay',
-    # '@PalaDinXPG',
-    # '@CanaldoVoid',
-    # '@ChratosGameplay',
-    # '@cmdrleonerd',
-    # '@100choro-Belém-Brasil'
+    '@CKXgameplay',
+    '@PalaDinXPG',
+    '@CanaldoVoid',
+    '@ChratosGameplay',
+    '@cmdrleonerd',
+    '@100choro-Belém-Brasil',
+    '@RenatoAugustoTech',
+    '@GutoGalego'
+
 ]
-dias_anterior = 4
+dias_anterior = 7
 
 conexao_s3 = ConfigS3Minio()
 
@@ -39,7 +42,7 @@ p4 = ObterListaComentarios(servico_log=logger, servico_youtube=servico_youtube, 
 p5 = ObterListaRespostaComentariosCorrente(servico_log=logger, servico_youtube=servico_youtube, servico_gravacao_dados=operacao_s3)
 p1.set_proxima_corrente(p2) \
     .set_proxima_corrente(p3) \
-    .set_proxima_corrente(p4) \
-    .set_proxima_corrente(p5)
+    .set_proxima_corrente(p4)
+    # .set_proxima_corrente(p5)
 p1.corrente(contexto=contexto)
 

@@ -50,6 +50,8 @@ class OperacaoMInioS3:
             """)
 
             datasframe = con.execute(consulta).fetchdf()
-        return datasframe
+            print(datasframe)
+
+            return datasframe
 
 

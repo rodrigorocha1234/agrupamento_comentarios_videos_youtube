@@ -2,7 +2,7 @@ from typing import NamedTuple
 
 
 class VideoYoutube(NamedTuple):
-    id_video: str
     id_canal: str
+    id_video: str
     nome_canal: str
-    nome_video: str
+    titulo_video: str
